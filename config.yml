@@ -1,4 +1,4 @@
 auth_type: basic
-api_key: ENV['secret_key']
-user_id: ENV['user']
-blog_id: ENV['pass']
+api_key: <%= ENV['secret_key'] %>
+user_id: <%= ENV['user_id'] %>
+blog_id: <%= ENV['blog_id'] %>
