@@ -8,6 +8,8 @@ class String
 end
 
 @connection = Hatenablog::Client.create
+p @connection.instance_variable_get(:@blog_id)
+p @connection.instance_variable_get(:@user_id)
 
 def new_entry?
   latest_entry = @connection.entries.to_a[2]
