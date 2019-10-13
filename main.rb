@@ -22,6 +22,7 @@ def all_entries
   return entries
 end
 
+# TODO: APIから取得した記事の情報と、今現在のindexの情報に差異がある場合だけindexを差し替える。
 def fetch_index
   stractured_index = {}
   @connection.entries.to_a[0].content.split("##").each_with_index do |category,i|  
@@ -77,6 +78,7 @@ def convert_to_format(new_index)
   return upload_content
 end
 
+## TODO: 例外処理の追加
 new_index = add_to_index(fetch_index,all_entries)
 string_formeted = convert_to_format(new_index)
 puts string_formeted
