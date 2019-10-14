@@ -7,13 +7,30 @@ class String
   end
 end
 
-@connection = Hatenablog::Client.create
-p @connection.instance_variable_get(:@blog_id)
-p @connection.instance_variable_get(:@user_id)
+def create_expect_index(entries)
+  stractured_entries = {}
+  stractured_index = {}
+  CategoiesToTitle.each_pair do |category,title|
+    stractured_entries[title] = entries.find_all{|entry| entry.categories[0] == category}
 
-def new_entry?
-  latest_entry = @connection.entries.to_a[2]
-  return  (latest_entry.updated < (Time.now - 60 * 15)) ? latest_entry : nil
+    stractured_entries.each_pair do |title,entries|
+    link_to_entries = []
+    entries.each do |entry|
+      entry_title = entry.title
+      uri   = entry.uri
+      created_at_string = uri.match(/[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}/)&.to_s
+      link_to_entry = "(#{created_at_string}) [#{uri}:title]"
+      link_to_entry.created_at(created_at_string)
+      link_to_entries << link_to_entry
+    end
+    stractured_index.merge!(title => link_to_entries)
+    end
+
+    stractured_index.each_key do |key|
+      stractured_index[key].sort_by!{|entry| (entry.date.to_i)}
+    end
+  end
+  return stractured_index
 end
 
 def all_entries
@@ -22,8 +39,7 @@ def all_entries
   return entries
 end
 
-# TODO: APIから取得した記事の情報と、今現在のindexの情報に差異がある場合だけindexを差し替える。
-def fetch_index
+def fetch_current_index
   stractured_index = {}
   @connection.entries.to_a[0].content.split("##").each_with_index do |category,i|  
     next if i == 0  # Description is written on the top of the entry. 
@@ -48,7 +64,7 @@ def find_title_from_category(entry)
   return CategoiesToTitle[entry.categories[0]]
 end
 
-def add_to_index(index, new_entries)
+def add_to_index(new_entries)
   index = Hash.new([])
   new_entries.each do |entry|
     uri = entry.uri
@@ -67,7 +83,7 @@ def add_to_index(index, new_entries)
 end
 
 def convert_to_format(new_index)
-  upload_content = "<p>このブログは自分の読書記録をまとめたものです。\n\n最終更新: #{Time.now.to_s}</p>\n\n\n"
+  upload_content = "<p>このブログは自分の読書記録をまとめたものです。</p> \n\n 最終更新: #{Time.now.to_s} \n\n"
   new_index.each_pair do |key,val|
     upload_content << "## #{key} \n\n"
     val.each do |entry|
@@ -78,16 +94,23 @@ def convert_to_format(new_index)
   return upload_content
 end
 
-## TODO: 例外処理の追加
-new_index = add_to_index(fetch_index,all_entries)
-string_formeted = convert_to_format(new_index)
-puts string_formeted
-@connection.update_entry(
-  @connection.entries.to_a[0].id,
-  @connection.entries.to_a[0].title,
-  string_formeted,
-  []
-)
+begin
+  @connection = Hatenablog::Client.create
+  unless create_expect_index(all_entries) == fetch_current_index
+    puts convert_to_format(create_expect_index(all_entries))
+    @connection.update_entry(
+    @connection.entries.to_a[0].id,
+    @connection.entries.to_a[0].title,
+    convert_to_format(create_expect_index(all_entries)),
+    []
+    )
+  end
+  rescue => e
+    p "Woops. Something went wrong."
+    p e.backtrace
+  ensure
+    p "Executed in #{Time.now.to_s}."
+end
 
 
 
