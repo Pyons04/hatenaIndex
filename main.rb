@@ -60,28 +60,6 @@ end
 
 CategoiesToTitle = YAML.load_file("./categories.yaml")
 
-def find_title_from_category(entry)
-  return CategoiesToTitle[entry.categories[0]]
-end
-
-def add_to_index(new_entries)
-  index = Hash.new([])
-  new_entries.each do |entry|
-    uri = entry.uri
-    title = find_title_from_category(entry)
-    created_at = uri.match(/[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}/)&.to_s
-    link_to_entry = "(#{created_at}) [#{uri}:title]"
-    link_to_entry.created_at(created_at)
-    index[title].size == 0 ? (index[title] = [link_to_entry]) : (index[title] << link_to_entry)
-  end
-
-  index.each_key do |key|
-    index[key].sort_by!{|entry| (entry.date.to_i)}
-  end
-
-  return index
-end
-
 def convert_to_format(new_index)
   upload_content = "<p>このブログは自分の読書記録をまとめたものです。</p> \n\n 最終更新: #{Time.now.to_s} \n\n"
   new_index.each_pair do |key,val|
@@ -105,10 +83,10 @@ begin
     []
     )
   end
-  rescue => e
+rescue => e
     p "Woops. Something went wrong."
     p e.backtrace
-  ensure
+ensure
     p "Executed in #{Time.now.to_s}."
 end
 
