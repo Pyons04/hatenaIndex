@@ -39,9 +39,11 @@ def all_entries
   return entries
 end
 
+
 def fetch_current_index
   stractured_index = {}
-  @connection.entries.to_a[0].content.split("##").each_with_index do |category,i|  
+  current_index = @connection.entries.to_a.find{|entry| entry.title == "目次"}
+  current_index.content.split("##").each_with_index do |category,i|  
     next if i == 0  # Description is written on the top of the entry. 
     entries = []
     title = ''
@@ -73,12 +75,14 @@ def convert_to_format(new_index)
 end
 
 begin
+  #TODO: 比較は本のタイトルと記事へのリンクのハッシュの比較なので、記事のタイトルが変更されても更新が行われない。
+  #TODO: 実行時に引数を指定して強制更新が出来るようにする。
   @connection = Hatenablog::Client.create
   unless create_expect_index(all_entries) == fetch_current_index
     puts convert_to_format(create_expect_index(all_entries))
     @connection.update_entry(
-    @connection.entries.to_a[0].id,
-    @connection.entries.to_a[0].title,
+    @connection.entries.to_a.find{|entry| entry.title == "目次"}.id,
+    @connection.entries.to_a.find{|entry| entry.title == "目次"}.title,
     convert_to_format(create_expect_index(all_entries)),
     []
     )
@@ -89,7 +93,6 @@ rescue => e
 ensure
     p "Executed in #{Time.now.to_s}."
 end
-
 
 
 
