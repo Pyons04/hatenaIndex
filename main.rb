@@ -42,7 +42,8 @@ end
 
 def fetch_current_index
   stractured_index = {}
-  current_index = @connection.entries.to_a.find{|entry| entry.title == "目次"}
+  current_index = @connection.all_entries.to_a.find{|entry| entry.title == "Index"}
+  raise "目次ページが見つかりませんでした。" if current_index == nil
   current_index.content.split("##").each_with_index do |category,i|  
     next if i == 0  # Description is written on the top of the entry. 
     entries = []
@@ -81,15 +82,15 @@ begin
   unless create_expect_index(all_entries) == fetch_current_index
     puts convert_to_format(create_expect_index(all_entries))
     @connection.update_entry(
-    @connection.entries.to_a.find{|entry| entry.title == "目次"}.id,
-    @connection.entries.to_a.find{|entry| entry.title == "目次"}.title,
+    @connection.all_entries.to_a.find{|entry| entry.title == "Index"}.id,
+    @connection.all_entries.to_a.find{|entry| entry.title == "Index"}.title,
     convert_to_format(create_expect_index(all_entries)),
     []
     )
   end
 rescue => e
     p "Woops. Something went wrong."
-    p e.backtrace
+    p e.message
 ensure
     p "Executed in #{Time.now.to_s}."
 end
